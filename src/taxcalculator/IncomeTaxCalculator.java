@@ -8,7 +8,7 @@ package taxcalculator;
  *
  * @author hasan
  */
-public class IncomeTaxCalculator {
+public class IncomeTaxCalculator implements TaxCalculator{
     	@Override
     public double calculateTax(double grossIncome, double taxCredit) {
         double taxableIncome = calculateTaxableIncome(grossIncome, taxCredit);

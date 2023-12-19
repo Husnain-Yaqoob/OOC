@@ -8,7 +8,7 @@ package taxcalculator;
  *
  * @author moizb
  */
-public class PRSICalculator {
+public class PRSICalculator implements TaxCalculator {
     @Override
     public double calculateTax(double grossIncome, double taxCredits) {
         // Calculate one-sixth of earnings over �352.01
