@@ -25,7 +25,7 @@ import taxcalculator.USCcalculator;
  *
  * @author moizb
  */
-public class UserServiceImpl {
+public class UserServiceImpl implements UserService{
     Connection connection = DatabaseManager.establishConnection(); 
 	@Override
 	public UserResponse login(String username, String password) {
