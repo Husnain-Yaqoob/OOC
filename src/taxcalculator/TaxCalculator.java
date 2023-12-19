@@ -9,5 +9,6 @@ package taxcalculator;
  * @author moizb
  */
 public interface TaxCalculator {
-    
+	double calculateTax(double grossIncome, double taxCredits);
 }
+
