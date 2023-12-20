@@ -12,6 +12,7 @@ import java.sql.SQLException;
  * @author hasan
  */
 public class DatabaseManager {
+    // Setting up the database connection details
      private static final String JDBC_URL = "jdbc:mysql://localhost:3306/ooc2023";
     private static final String USERNAME = "ooc2023";
     private static final String PASSWORD = "ooc_2023";
@@ -24,6 +25,7 @@ public class DatabaseManager {
             // Establish a connection
             Connection connection = DriverManager.getConnection(JDBC_URL, USERNAME, PASSWORD);
             
+             // If connection is successfull, print a confirmation message
             System.out.println("Database connected");
             
             return connection;
