@@ -21,12 +21,10 @@ import taxcalculator.IncomeTaxCalculator;
 import taxcalculator.PRSICalculator;
 import taxcalculator.TaxCalculator;
 import taxcalculator.USCcalculator;
-/**
- *
- * @author moizb
- */
-public class UserServiceImpl implements UserService{
-    Connection connection = DatabaseManager.establishConnection(); 
+
+
+public class UserServiceImpl implements UserService {
+	Connection connection = DatabaseManager.establishConnection(); 
 	@Override
 	public UserResponse login(String username, String password) {
 	    UserResponse response = new UserResponse();
@@ -94,11 +92,18 @@ public class UserServiceImpl implements UserService{
 	            response.setStatus(false);
 	        }
 	    } catch (SQLException e) {
-	        e.printStackTrace();
+	        if (e.getErrorCode() == 1062) { // MySQL error code for unique constraint violation
+	            response.setMessage("Username already exists. Please choose a different username.");
+		        response.setStatus(false);
+		        return response;
+	        } else {
+	            // Handle other types of SQLException or rethrow the exception
+	            response.setMessage(e.getMessage());
+		        response.setStatus(false);
+		        return response;
+	        }
 	        // Handle the exception according to your requirements
-	        response.setMessage(e.getMessage());
-	        response.setStatus(false);
-	        return response;
+	        	
 	    }
 	    return response;
 	}
@@ -111,14 +116,15 @@ public class UserServiceImpl implements UserService{
 
 		if (!newPassword.isEmpty()) {
 		    while (true) {
-
 		        if (Helper.isValidPassword(newPassword)) {
 		            System.out.println("Password is valid.");
 		            // Move forward with the next input or action
 		            break; // Exit the loop as a valid password is entered
 		        } else {
 		            System.out.println("Password is not valid. It must contain at least 8 characters with 1 special character.");
-		            // Continue the loop to ask for the password again
+		            // Ask the user to enter the password again
+		            System.out.println("Enter new password:");
+		            newPassword = scanner.nextLine();
 		        }
 		    }
 		} else {
@@ -144,22 +150,57 @@ public class UserServiceImpl implements UserService{
 
 	@Override
 	public void updateProfile(String newPassword, String newName, String newSurname, String newAge, String userId) {
-	    String query = "UPDATE Users SET Password = IFNULL(?, Password), Name = IFNULL(?, Name), "
-	            + "Surname = IFNULL(?, Surname), Age = IFNULL(?, Age) WHERE UserID = ?";
+		  // Define the base update query
+	    String query = "UPDATE Users SET Password = ?, Name = ?, Surname = ?, Age = ? WHERE UserID = ?";
+	    
 	    try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-	        preparedStatement.setString(1, newPassword);
-	        preparedStatement.setString(2, newName);
-	        preparedStatement.setString(3, newSurname);
-	        preparedStatement.setString(4, newAge);
-	        preparedStatement.setInt(5, Integer.valueOf(userId));
+	        // Conditionally set parameters only if they are not empty
+	        int parameterIndex = 1; // Start with the first parameter
+	        
+	        if (!newPassword.isEmpty()) {
+	            preparedStatement.setString(parameterIndex++, newPassword);
+	        } else {
+	            // If newPassword is empty, set it to null
+	            preparedStatement.setNull(parameterIndex++, java.sql.Types.VARCHAR);
+	        }
+	        
+	        if (!newName.isEmpty()) {
+	            preparedStatement.setString(parameterIndex++, newName);
+	        } else {
+	            // If newName is empty, set it to null
+	            preparedStatement.setNull(parameterIndex++, java.sql.Types.VARCHAR);
+	        }
+	        
+	        if (!newSurname.isEmpty()) {
+	            preparedStatement.setString(parameterIndex++, newSurname);
+	        } else {
+	            // If newSurname is empty, set it to null
+	            preparedStatement.setNull(parameterIndex++, java.sql.Types.VARCHAR);
+	        }
+	        
+	        if (!newAge.isEmpty()) {
+	            preparedStatement.setString(parameterIndex++, newAge);
+	        } else {
+	            // If newAge is empty, set it to null
+	            preparedStatement.setNull(parameterIndex++, java.sql.Types.VARCHAR);
+	        }
+	        
+	        // Set the user ID parameter
+	        preparedStatement.setInt(parameterIndex++, Integer.valueOf(userId));
+	        
+	        // Execute the update query
 	        preparedStatement.executeUpdate();
+	        
 	        System.out.println("Profile updated successfully!");
+	        
+	        // Update user operation
 	        UserOperation operation = new UserOperation();
 	        User user = new User();
 	        user.setUserId(userId);
-        	operation.setUser(user);
-        	operation.setOperationType("Profile Updated");
-        	saveUserOperation(operation);
+	        operation.setUser(user);
+	        operation.setOperationType("Profile Updated");
+	        saveUserOperation(operation);
+	        
 	    } catch (Exception e) {
 	        System.out.println("Error Occurred in updating user: " + e.getMessage());
 	    }
@@ -266,7 +307,7 @@ public class UserServiceImpl implements UserService{
 	                List<UserOperation> userOperations = getUserOperations();
 	                for (UserOperation operation : userOperations) {
 	                    System.out.println("OperationID: " + operation.getOperationID());
-	                    System.out.println("UserID: " + operation.getUser().getUserId());
+	                    System.out.println("UserID: " + operation.getUser().getUsername());
 	                    System.out.println("OperationType: " + operation.getOperationType());
 	                    System.out.println("Timestamp: " + operation.getTimestamp());
 	                    System.out.println("--------------");
@@ -310,6 +351,7 @@ public class UserServiceImpl implements UserService{
 
 	            case 2:
 	                // Implement logic for saving and seeing equations for regular user
+	            	System.out.println("Save and see equations!");
 	                break;
 	            case 3:
 	            	calculateTax(scanner, loggedInUser);
@@ -357,22 +399,27 @@ public class UserServiceImpl implements UserService{
 
 	    // Example: Fetch operations using JDBC
 	    try (Statement statement = connection.createStatement();
-	         ResultSet resultSet = statement.executeQuery("SELECT * FROM UserOperations")) {
+	             ResultSet resultSet = statement.executeQuery(
+	                "SELECT UserOperations.OperationID, Users.Username, UserOperations.OperationType, UserOperations.Timestamp " +
+	                "FROM UserOperations " +
+	                "JOIN Users ON UserOperations.UserID = Users.UserID")) {
 
-	        while (resultSet.next()) {
-	        	UserOperation operation = new UserOperation();
-	            // Set OperationID
-	            operation.setOperationID(resultSet.getInt("OperationID"));
-	            User user = new User();
-	            user.setUserId(String.valueOf(resultSet.getInt("UserID")));
-	            operation.setUser(user);
-	            operation.setOperationType(resultSet.getString("OperationType"));
-	            // Set Timestamp
-	            operation.setTimestamp(resultSet.getTimestamp("Timestamp").toLocalDateTime());
-	            // Add the UserOperation object to the list
-	            userOperations.add(operation);
-	        }
-	    } catch (SQLException e) {
+	            while (resultSet.next()) {
+	                UserOperation operation = new UserOperation();
+	                operation.setOperationID(resultSet.getInt("OperationID"));
+
+	                // Create a User object and set the Username
+	                User user = new User();
+//	                user.setUserId(String.valueOf(resultSet.getInt("UserID"))); // Assuming there's a getUserId method in the User class
+	                user.setUsername(resultSet.getString("Username"));
+	                operation.setUser(user);
+
+	                operation.setOperationType(resultSet.getString("OperationType"));
+	                operation.setTimestamp(resultSet.getTimestamp("Timestamp").toLocalDateTime());
+
+	                userOperations.add(operation);
+	            }
+	        } catch (SQLException e) {
 	        e.printStackTrace();
 	        // Handle exceptions
 	    }
@@ -493,4 +540,5 @@ public class UserServiceImpl implements UserService{
             // Handle the exception according to your requirements
         }
     }
+
 }
