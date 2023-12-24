@@ -23,6 +23,7 @@ import taxcalculator.TaxCalculator;
 import taxcalculator.USCcalculator;
 
 
+
 public class UserServiceImpl implements UserService {
 	Connection connection = DatabaseManager.establishConnection(); 
 	@Override
