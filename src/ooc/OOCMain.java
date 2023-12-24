@@ -19,11 +19,8 @@ import user.*;
  */
 public class OOCMain {
 
-    /**
-     * @param args the command line arguments
-     */
     public static void main(String[] args) {
-      try (Connection connection = DatabaseManager.establishConnection()) {
+    	try (Connection connection = DatabaseManager.establishConnection()) {
 
     	    Scanner scanner = new Scanner(System.in);
 
@@ -72,23 +69,24 @@ public class OOCMain {
 
     	            case 2:
     	                // Register
-    	                System.out.println("Enter username:");
-    	                String username1 = scanner.nextLine();
+    	            	System.out.println("Enter username:");
+    	            	String username1 = scanner.nextLine();
 
-    	                String password1;
-    	                while (true) {
-    	                    System.out.println("Enter password:");
-    	                    password1 = scanner.nextLine();
+    	            	String password1;
+    	            	while (true) {
+    	            	    System.out.println("Enter password:");
+    	            	    password1 = scanner.nextLine();
 
-    	                    if (Helper.isValidPassword(password1)) {
-    	                        System.out.println("Password is valid.");
-    	                        // Move forward with the next input or action
-    	                        break; // Exit the loop as a valid password is entered
-    	                    } else {
-    	                        System.out.println("Password is not valid. It must contain at least 8 characters with 1 special character.");
-    	                        // Continue the loop to ask for the password again
-    	                    }
-    	                }
+    	            	    if (Helper.isValidPassword(password1)) {
+    	            	        System.out.println("Password is valid.");
+    	            	        // Move forward with the next input or action
+    	            	        break; // Exit the loop as a valid password is entered
+    	            	    } else {
+    	            	        System.out.println("Password is not valid. It must contain at least 8 characters with 1 special character.");
+    	            	        // Continue the loop to ask for the password again
+    	            	    }
+    	            	}
+
 
     	                System.out.println("Enter name:");
     	                String name = scanner.nextLine();
@@ -107,7 +105,7 @@ public class OOCMain {
     	                        // Move forward with the next input or action
     	                        break; // Exit the loop as a valid role is entered
     	                    } else {
-    	                        System.out.println("Invalid role. Please enter 'ADMIN' OR 'REGULAR'.");
+    	                        System.out.println("Invalid role. Please enter 'Admin' OR 'Regular'.");
     	                        // Continue the loop to ask for the role again
     	                    }
     	                }
@@ -129,8 +127,8 @@ public class OOCMain {
 
     	} catch (SQLException e) {
     	    e.printStackTrace();
-    	}
-    }
+            }
     }
     
 
+}
